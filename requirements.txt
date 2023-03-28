@@ -1,0 +1,9 @@
+mediapipe==0.8.11
+opencv-python
+tensorflow==2.9.0
+scikit-learn
+matplotlib
+ipykernel
+pandas
+seaborn
+pydirectinput==1.0.4
