@@ -49,11 +49,11 @@ def main():
         static_image_mode=use_static_image_mode,
         max_num_hands=1,
         min_detection_confidence=min_detection_confidence,
-        min_tracking_confidence=min_tracking_confidence,
-    )
+        min_tracking_confidence=min_tracking_confidence)
 
     keypoint_classifier = KeyPointClassifier()
     point_history_classifier = PointHistoryClassifier()
+    # ADD the keyEvents_action here
 
     # READ LABELS
     with open('model/keypoint_classifier/keypoint_classifier_label.csv',
@@ -70,14 +70,14 @@ def main():
             row[0] for row in point_history_classifier_labels
         ]
 
-    # FPS MEASUREMENT
+    # FPS MEASUREMENT ### maybe del
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
-    # COORDINATE HISTORY
+    # COORDINATE HISTORY ### maybe del
     history_length = 16
     point_history = deque(maxlen=history_length)
 
-    # FINGER GESTURE HISTORY
+    # FINGER GESTURE HISTORY ### mayb del
     finger_gesture_history = deque(maxlen=history_length)
 
     #  Setting the mode to deafult 0 as this is inference mode
@@ -87,29 +87,24 @@ def main():
     # Opening the camera and geting the feed
     while True:
         fps = cvFpsCalc.get()
+        key = cv.waitKey(10)
 
         # Process Key (ESC: end)
-        key = cv.waitKey(10)
-        if key == 27:  # ESC
+        if 0xFF == ord('q'):
             break
         number, mode = select_mode(key, mode)
-
-        # Backup exit/break key
-        if cv.waitKey(10) & 0xFF == ord('q'):
-            break
 
         # Camera capture
         ret, image = cap.read()  # ret rerturns a boolean, so if false it breaks us out
         if not ret:
             break
-        image = cv.flip(image, 1)  # Mirror display
-        debug_image = copy.deepcopy(image)
 
-        # Detection implementation
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        image = cv.flip(image, 1)  # Mirror display
+        debug_image = copy.deepcopy(image) # make a copy
+        image = cv.cvtColor(image, cv.COLOR_BGR2RGB) # mediapipe likes
 
         image.flags.writeable = False  # save memory
-        results = hands.process(image)
+        results = hands.process(image) # detection
         image.flags.writeable = True  # save memory
 
         # Getting and collecting the landmarks
