@@ -86,7 +86,7 @@ args = get_args()
 cap_device = args.device
 
 
-def select_mode(key, mode): ########################## NOT NECESSARY FOR INFERENCE
+def select_mode(key, mode): ########################## NOT NECESSARY FOR INFERENCE MODE
     number = -1
     if 48 <= key <= 57:  # 0 ~ 9
         number = key - 48
