@@ -4,6 +4,7 @@ import csv
 import copy
 import argparse
 import itertools
+import keyboard
 from collections import Counter
 from collections import deque
 
@@ -86,15 +87,15 @@ args = get_args()
 cap_device = args.device
 
 
-def select_mode(key, mode): ########################## NOT NECESSARY FOR INFERENCE MODE
+def select_mode(key, mode): ########################## NEED TO TEST
     number = -1
     if 48 <= key <= 57:  # 0 ~ 9
         number = key - 48
-    if key == 110:  # n
+    if keyboard.is_pressed('n'):  # n is for inference mode
         mode = 0
-    if key == 107:  # k is for Logging Key Point mode / hand gesture recognition mode
+    if keyboard.is_pressed('k'):  # k is for Logging Key Point mode / hand gesture recognition mode
         mode = 1
-    if key == 104:  # h is for Logging Point History mode / finger gesture recognition mode
+    if keyboard.is_pressed('h'):  # h is for Logging Point History mode / finger gesture recognition mode
         mode = 2
     return number, mode
 
