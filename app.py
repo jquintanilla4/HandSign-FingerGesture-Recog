@@ -6,6 +6,8 @@ import argparse
 import keyboard
 from collections import Counter
 from collections import deque
+import pydirectinput
+import time
 
 import cv2 as cv
 import numpy as np
@@ -37,6 +39,9 @@ use_static_image_mode = False
 min_detection_confidence = 0.8 # float
 min_tracking_confidence = 0.5 # int
 use_brect = True
+last_sign = None
+last_detection_time = 0 # wait time in seconds
+
 
 # MEDIAPIPE MODEL LOAD
 mp_hands = mp.solutions.hands
@@ -159,20 +164,18 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 # Write to the dataset file
                 logging_csv(number, mode, pre_processed_landmark_list, pre_processed_point_history_list)
 
-                # Hand sign classification
+                # HAND SIGN/GESTURE CLASSIFICATION
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-                # Point gesture (line 3 on the keypoint_classifier_label, base index 2)
-                if hand_sign_id == 2:
+                if hand_sign_id == 2: # base index 2 is the ID for the pointer sign
                     point_history.append(landmark_list[8])
                 else:
                     point_history.append([0, 0])
 
-                # Finger gesture classification
+                # FINGER GESTURE CLASSIFICATION
                 finger_gesture_id = 0
                 point_history_len = len(pre_processed_point_history_list)
                 if point_history_len == (history_length * 2):
-                    finger_gesture_id = point_history_classifier(
-                        pre_processed_point_history_list)
+                    finger_gesture_id = point_history_classifier(pre_processed_point_history_list)
 
                 # Calculates the gesture IDs in the latest detection
                 finger_gesture_history.append(finger_gesture_id)
@@ -180,14 +183,36 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
-                # debug_image = draw_landmarks(debug_image, landmark_list)
                 debug_image = draw_info_text(
                     debug_image,
                     brect,
                     handedness,
                     keypoint_classifier_labels[hand_sign_id],
-                    point_history_classifier_labels[most_common_fg_id[0][0]],
-                )
+                    point_history_classifier_labels[most_common_fg_id[0][0]])
+                
+                # Actions part
+                # MAYBE TURN THIS INTO A FUNCTION AND ACCESS IT ONLY VIA MODE 0, TOMORROW'S WORK
+                # FOR INFERENCE MODE ONLY
+                current_sign = hand_sign_id
+                # If the current sign is different than the last sign, or if it's been 3 seconds since the last detection
+                if current_sign != last_sign or time.time() - last_detection_time >= 5:
+                    if hand_sign_id == 0: # base index 0 is the ID for left swipe
+                        print('left swipe')
+                        last_sign = hand_sign_id
+                        last_detection_time = time.time()
+                    elif hand_sign_id == 1: # base index 1 is the ID for right swipe
+                        print('right swipe')
+                        last_sign = hand_sign_id
+                        last_detection_time = time.time()
+                    elif hand_sign_id == 3: # base index 3 is the ID for toggle detection
+                        print('toggle detection')
+                        last_sign = hand_sign_id
+                        last_detection_time = time.time()
+                    # else:
+                    #     print('bingo')
+                    #     last_sign = hand_sign_id
+                    #     last_detection_time = time.time()
+
         else:
             point_history.append([0, 0])
 
@@ -197,6 +222,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
         # Video feedback window
         cv.imshow('Hand Gesture Recognition', debug_image)
 
+        # ACTIVATE FOR INFERENCE ONLY, LOOK AT LINE 132 ('ESC') FIRST BEFORE ACTIVATING
         # if cv.waitKey(10) & 0xFF == ord('q'): # quit the program with the letter q
         #     break
 

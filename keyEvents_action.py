@@ -1,2 +1,0 @@
-import pydirectinput
-import time
