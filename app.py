@@ -8,6 +8,7 @@ from collections import Counter
 from collections import deque
 import pydirectinput
 import time
+import re
 
 import cv2 as cv
 import numpy as np
@@ -41,6 +42,7 @@ min_tracking_confidence = 0.5 # int
 use_brect = True
 last_sign = None
 last_detection_time = 0 # wait time in seconds
+num_k = None # for the on_press function
 
 
 # MEDIAPIPE MODEL LOAD
@@ -86,6 +88,16 @@ def mediapipe_detection(image, model):
     return image, results, debug_image
 
 
+def on_press(event):
+    global num_k
+    # check if the key pressed is a numpad key
+    if event.event_type == 'down' and event.name.startswith('numpad'):
+        # Extract the number from the key name
+        num_str = re.match(r'numpad(\d)', event.name).group(1)
+        if event.event_type == 'down' and event.name == 'enter':
+            num_k = int(num_str)
+
+
 mode = 0 #  Setting the mode to deafult 0 as this is inference mode
 def select_mode(key, mode): ### DELETE FOR INFERENCE ONLY
     number = -1
@@ -127,9 +139,12 @@ cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 # THE LOOP
 with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
     while cap.isOpened():
+        keyboard.on_press(on_press)
+        keyboard.wait()
+
         fps = cvFpsCalc.get()
 
-        key = cv.waitKey(10) ### MODIFY FOR INFERENCE ONLY
+        key = cv.waitKey(10) ### MODIFY FOR INFERENCE ONLY ### MODIFY LINE 146-149 TOMORROW TO MATCH THE ON_PRESS FUNCTION
         if key == 27: # ESC
             break
         number, mode = select_mode(key, mode)
@@ -191,27 +206,27 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     point_history_classifier_labels[most_common_fg_id[0][0]])
                 
                 # Actions part
-                # MAYBE TURN THIS INTO A FUNCTION AND ACCESS IT ONLY VIA MODE 0, TOMORROW'S WORK
                 # FOR INFERENCE MODE ONLY
-                current_sign = hand_sign_id
-                # If the current sign is different than the last sign, or if it's been 3 seconds since the last detection
-                if current_sign != last_sign or time.time() - last_detection_time >= 5:
-                    if hand_sign_id == 0: # base index 0 is the ID for left swipe
-                        print('left swipe')
-                        last_sign = hand_sign_id
-                        last_detection_time = time.time()
-                    elif hand_sign_id == 1: # base index 1 is the ID for right swipe
-                        print('right swipe')
-                        last_sign = hand_sign_id
-                        last_detection_time = time.time()
-                    elif hand_sign_id == 3: # base index 3 is the ID for toggle detection
-                        print('toggle detection')
-                        last_sign = hand_sign_id
-                        last_detection_time = time.time()
-                    # else:
-                    #     print('bingo')
-                    #     last_sign = hand_sign_id
-                    #     last_detection_time = time.time()
+                if mode == 0:
+                    current_sign = hand_sign_id
+                    # If the current sign is different than the last sign, or if it's been 3 seconds since the last detection
+                    if current_sign != last_sign or time.time() - last_detection_time >= 5:
+                        if hand_sign_id == 0: # base index 0 is the ID for left swipe
+                            print('left swipe')
+                            last_sign = hand_sign_id
+                            last_detection_time = time.time()
+                        elif hand_sign_id == 1: # base index 1 is the ID for right swipe
+                            print('right swipe')
+                            last_sign = hand_sign_id
+                            last_detection_time = time.time()
+                        elif hand_sign_id == 3: # base index 3 is the ID for toggle detection
+                            print('toggle detection')
+                            last_sign = hand_sign_id
+                            last_detection_time = time.time()
+                        # else:
+                        #     print('bingo')
+                        #     last_sign = hand_sign_id
+                        #     last_detection_time = time.time()
 
         else:
             point_history.append([0, 0])
