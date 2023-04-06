@@ -42,7 +42,8 @@ min_tracking_confidence = 0.5 # int
 use_brect = True
 last_sign = None
 last_detection_time = 0 # wait time in seconds
-num_k = None # for the on_press function
+last_key_pressed = ''
+# num_k = None # for the numpad_press function
 
 
 # MEDIAPIPE MODEL LOAD
@@ -88,44 +89,90 @@ def mediapipe_detection(image, model):
     return image, results, debug_image
 
 
-def on_press(event):
-    global num_k
-    # check if the key pressed is a numpad key
-    if event.event_type == 'down' and event.name.startswith('numpad'):
-        # Extract the number from the key name
-        num_str = re.match(r'numpad(\d)', event.name).group(1)
-        if event.event_type == 'down' and event.name == 'enter':
-            num_k = int(num_str)
-
-
 mode = 0 #  Setting the mode to deafult 0 as this is inference mode
-def select_mode(key, mode): ### DELETE FOR INFERENCE ONLY
-    number = -1
-    if 48 <= key <= 57:  # 0 ~ 9 ### MAYBE USE A LISTENER FUNCTION
-        number = key - 48
+# def select_mode(key, mode): ### TEST THE NEW NUMPAD_PRESS FUNCTION, SO MODIFYING THIS
+#     number = -1
+#     if 48 <= key <= 57:  # 0 ~ 9 ### MAYBE USE A LISTENER FUNCTION
+#         number = key - 48
+#     if keyboard.is_pressed('n'):  # n is for inference mode
+#         mode = 0
+#     if keyboard.is_pressed('k'):  # k is for Logging Key Point mode / hand gesture recognition mode
+#         mode = 1
+#     if keyboard.is_pressed('h'):  # h is for Logging Point History mode / finger gesture recognition mode
+#         mode = 2
+#     return number, mode
+def select_mode(mode): ### TESTING
     if keyboard.is_pressed('n'):  # n is for inference mode
         mode = 0
     if keyboard.is_pressed('k'):  # k is for Logging Key Point mode / hand gesture recognition mode
         mode = 1
     if keyboard.is_pressed('h'):  # h is for Logging Point History mode / finger gesture recognition mode
         mode = 2
-    return number, mode
+    return mode
 
 
-def logging_csv(number, mode, landmark_list, point_history_list): ### DELETE FOR INFERENCE ONLY
+# def numpad_press(event):
+#     if mode == 0:
+#         pass
+#     if mode == 1 or mode == 2:
+#         # global num_k ## TESTING RETURN INSTEAD OF GLOBAL
+#         # check if the key pressed is a numpad key
+#         if event.event_type == 'down' and event.name.startswith('numpad'):
+#             # Extract the number from the key name
+#             num_str = re.match(r'numpad(\d)', event.name).group(1)
+#             if event.event_type == 'down' and event.name == 'enter':
+#                 num_k = int(num_str)
+#                 return num_k
+
+
+# def logging_csv(number, mode, landmark_list, point_history_list): ### DELETE FOR INFERENCE ONLY ### TEST THE NEW NUMPAD_PRESS FUNCTION, SO MODIFYING THIS
+#     if mode == 0:
+#         pass
+#     if mode == 1 and (0 <= number <= 9):
+#         csv_path = 'model/keypoint_classifier/keypoint.csv'
+#         with open(csv_path, 'a', newline="") as f:
+#             writer = csv.writer(f)
+#             writer.writerow([number, *landmark_list])
+#     if mode == 2 and (0 <= number <= 9):
+#         csv_path = 'model/point_history_classifier/point_history.csv'
+#         with open(csv_path, 'a', newline="") as f:
+#             writer = csv.writer(f)
+#             writer.writerow([number, *point_history_list])
+#     return
+
+key_map = {
+    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+    '-': 10, '=': 11, '[': 12, ']': 13, '\\': 14, ';': 15, "'": 16, ',': 17, '.': 18, '/': 19,
+    'a': 20, 'b': 21, 'c': 22, 'd': 23, 'e': 24, 'f': 25, 'g': 26, 'i': 28, 'j': 29,
+    'l': 31, 'm': 32, 'o': 34, 'p': 35, 'r': 37, 's': 38, 't': 39,
+    'u': 40, 'v': 41, 'w': 42, 'x': 43, 'y': 44, 'z': 45, '`': 46, 'kp_0': 47, 'kp_1': 48,
+    'kp_2': 49, 'kp_3': 50, 'kp_4': 51, 'kp_5': 52, 'kp_6': 53, 'kp_7': 54, 'kp_8': 55,
+    'kp_9': 56, 'kp_*': 57, 'kp_+': 58, 'kp_-': 59, 'kp_.': 60, 'kp_/': 61, 'left': 62,
+    'right': 63, 'up': 64, 'down': 65, 'insert': 66, 'delete': 67, 'home': 68, 'end': 69,
+    'page_up': 70, 'page_down': 71, 'tab': 72, 'caps_lock': 73, 'ctrl': 74, 'alt': 75,
+    'shift': 76, 'space': 77
+}
+excluded_keys = ['q', 'n', 'k', 'h']
+def logging_csv(bingo, mode, landmark_list, point_history_list): ### DELETE FOR INFERENCE ONLY ### TEST THE NEW NUMPAD_PRESS FUNCTION, SO MODIFYING THIS
+    global last_key_pressed
     if mode == 0:
         pass
-    if mode == 1 and (0 <= number <= 9):
-        csv_path = 'model/keypoint_classifier/keypoint.csv'
-        with open(csv_path, 'a', newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([number, *landmark_list])
-    if mode == 2 and (0 <= number <= 9):
-        csv_path = 'model/point_history_classifier/point_history.csv'
-        with open(csv_path, 'a', newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([number, *point_history_list])
-    return
+    if mode == 1:
+        if bingo in key_map and bingo not in excluded_keys:
+            key_num = key_map[bingo] # convert the key to a number
+            csv_path = 'model/keypoint_classifier/keypoint2.csv'
+            with open(csv_path, 'a', newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([key_num, *landmark_list])
+            last_key_pressed = bingo
+    if mode == 2:
+        if bingo in key_map and bingo not in excluded_keys:
+            key_num = key_map[bingo] # convert the key to a number
+            csv_path = 'model/point_history_classifier/point_history.csv'
+            with open(csv_path, 'a', newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([key_num, *point_history_list])
+            last_key_pressed = bingo
 
 
 # ARGUMENT PASSING
@@ -139,16 +186,20 @@ cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 # THE LOOP
 with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
     while cap.isOpened():
-        keyboard.on_press(on_press)
-        keyboard.wait()
+        # number, mode = select_mode(key, mode) ### TESTING NUMPAD_PRESS FUNCTION
+        mode = select_mode(mode)
+
+        # keyboard.on_press(numpad_press)
+
+        # Assign num_k to the keyboard key for "`"
+        # keyboard.add_hotkey('`', lambda event: keyboard.on_press(numpad_press)) ### TEST WHAT HAPPENS WITHOUT IT
 
         fps = cvFpsCalc.get()
 
-        key = cv.waitKey(10) ### MODIFY FOR INFERENCE ONLY ### MODIFY LINE 146-149 TOMORROW TO MATCH THE ON_PRESS FUNCTION
-        if key == 27: # ESC
-            break
-        number, mode = select_mode(key, mode)
-
+        # bingo = cv.waitKey(5) ### TESTING THE ALTERNATIVE AT THE BOTTOM
+        # if bingo == ord('q'):
+        #     break
+        
         # Camera capture
         ret, frame = cap.read()  # ret rerturns a boolean, so if false it breaks us out
         if not ret:
@@ -177,7 +228,9 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 pre_processed_point_history_list = pre_process_point_history(debug_image, point_history)
 
                 # Write to the dataset file
-                logging_csv(number, mode, pre_processed_landmark_list, pre_processed_point_history_list)
+                # logging_csv(number, mode, pre_processed_landmark_list, pre_processed_point_history_list) ### TESTING NUMPAD_PRESS FUNCTION
+                # logging_csv(bingo, mode, pre_processed_landmark_list, pre_processed_point_history_list)
+                keyboard.on_press(lambda event: logging_csv(event.name, mode, pre_processed_landmark_list, pre_processed_point_history_list))
 
                 # HAND SIGN/GESTURE CLASSIFICATION
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
@@ -232,14 +285,15 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
             point_history.append([0, 0])
 
         debug_image = draw_point_history(debug_image, point_history)
-        debug_image = draw_info(debug_image, fps, mode, number)
+        # debug_image = draw_info(debug_image, fps, mode, number) ### TESTING NUMPAD_PRESS FUNCTION
+        debug_image = draw_info(debug_image, fps, mode, last_key_pressed)
 
         # Video feedback window
         cv.imshow('Hand Gesture Recognition', debug_image)
 
         # ACTIVATE FOR INFERENCE ONLY, LOOK AT LINE 132 ('ESC') FIRST BEFORE ACTIVATING
-        # if cv.waitKey(10) & 0xFF == ord('q'): # quit the program with the letter q
-        #     break
+        if cv.waitKey(5) & 0xFF == ord('q'): # quit the program with the letter q
+            break
 
 cap.release()
 cv.destroyAllWindows()

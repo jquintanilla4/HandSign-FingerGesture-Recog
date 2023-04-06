@@ -49,10 +49,14 @@ def draw_info(image, fps, mode, number):
     mode_string = ['Logging Key Point', 'Logging Point History']
     if 1 <= mode <= 2:
         cv.putText(image, "MODE:" + mode_string[mode - 1], (10, 90),
-                   cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
+                   cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 128, 0), 1,
                    cv.LINE_AA)
-        if 0 <= number <= 9:
+        # if 0 <= number <= 9: ### TESTING NUMPAD_PRESS FUNCTION
+        #     cv.putText(image, "NUM:" + str(number), (10, 110),
+        #                cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
+        #                cv.LINE_AA)
+        if number:
             cv.putText(image, "NUM:" + str(number), (10, 110),
-                       cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
+                       cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 128, 0), 1,
                        cv.LINE_AA)
     return image
