@@ -50,6 +50,9 @@ def pre_process_landmark_v2(landmark_list):
 
 
 def pre_process_point_history_v2(image, point_history):
+    if not point_history: # check if point_history is empty
+        return []
+    
     image_width, image_height = image.shape[1], image.shape[0]
 
     # Convert to numpy array

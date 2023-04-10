@@ -38,6 +38,8 @@ use_brect = True
 # For the TD actions
 last_sign = None
 last_detection_time = 0 # wait time in seconds
+last_toggle_detection_time = 0 # wait time in seconds
+toggle_interval = 30 # wait time in seconds
 
 # MEDIAPIPE MODEL LOAD
 mp_hands = mp.solutions.hands
@@ -168,7 +170,8 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
 
                 # HAND SIGN/GESTURE CLASSIFICATION
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-                if hand_sign_id == 2: # base index 2 is the ID for the pointer sign
+                # if hand_sign_id == 2: # base index 2 is the ID for the pointer sign
+                if hand_sign_id == 'Not Applicable': # We don't need this at this point in time
                     point_history.append(landmark_list[8])
                 else:
                     point_history.append([0, 0])
@@ -193,20 +196,43 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
                 
                 # Actions part
                 # FOR INFERENCE MODE ONLY
+                
                 if mode == 0:
                     current_sign = hand_sign_id
-                    # If the current sign is different than the last sign, or if it's been 3 seconds since the last detection
+                    # If the current sign is different than the last sign, or if it's been 5 seconds since the last detection
                     if current_sign != last_sign or time.time() - last_detection_time >= 5:
                         if hand_sign_id == 0: # base index 0 is the ID for left swipe
+                            pydirectinput.keyDown('f')
+                            time.sleep(0.1)
+                            pydirectinput.keyUp('f')
+                            time.sleep(0.1)
                             print('left swipe')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
                         elif hand_sign_id == 1: # base index 1 is the ID for right swipe
+                            pydirectinput.keyDown('h')
+                            time.sleep(0.1)
+                            pydirectinput.keyUp('h')
+                            time.sleep(0.1)
                             print('right swipe')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
-                        elif hand_sign_id == 3: # base index 3 is the ID for toggle detection
-                            print('toggle detection')
+                        elif hand_sign_id == 3:
+                            if time.time() - last_toggle_detection_time >= toggle_interval: # base index 3 is the ID for toggle detection
+                                pydirectinput.keyDown('g')
+                                time.sleep(0.1)
+                                pydirectinput.keyUp('g')
+                                time.sleep(0.1)
+                                print('toggle detection')
+                                last_sign = hand_sign_id
+                                last_detection_time = time.time()
+                                last_toggle_detection_time = time.time()
+                        elif hand_sign_id == 4: # base index 4 is the ID for blank
+                            print('blank')
+                            last_sign = hand_sign_id
+                            last_detection_time = time.time()
+                        elif hand_sign_id == 5: # base index 5 is the ID for the blank_stop
+                            print('blank stop')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
 
