@@ -7,6 +7,8 @@ from collections import Counter
 from collections import deque
 import pydirectinput
 import time
+import threading
+import concurrent.futures
 
 import cv2 as cv
 import mediapipe as mp
@@ -35,11 +37,13 @@ cap_height = 540 # int
 buffer_size = 1 # int
 # For the Bounding Box
 use_brect = True
-# For the TD actions
+# For the TD actions ### TESTING
 last_sign = None
 last_detection_time = 0 # wait time in seconds
-last_toggle_detection_time = 0 # wait time in seconds
-toggle_interval = 30 # wait time in seconds
+last_detection_off_time = 0 # track the last time the detection was off
+last_detection_on_time = 0 # track the last time the detection was on
+detection_off_interval = 10 # wait time in seconds
+detection_on_interval = 90 # wait time in seconds
 
 # MEDIAPIPE MODEL LOAD
 mp_hands = mp.solutions.hands
@@ -74,6 +78,16 @@ def mediapipe_detection(image, model):
     image.flags.writeable = True  # save memory
     return image, results, debug_image
 
+
+# Key press function with threading for the TD actions
+# using time.sleep() within the loop can block the program from excuting, causing stuttering
+# using threading can solve this problem
+def press_key(key, press_duration=0.1, release_duration=0.1):
+    pydirectinput.keyDown(key)
+    time.sleep(press_duration)
+    pydirectinput.keyUp(key)
+    time.sleep(release_duration)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
 mode = 0 #  Setting the mode to deafult 0 as this is inference mode
 def select_mode(mode):
@@ -195,46 +209,41 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
                                              point_history_classifier_labels[most_common_fg_id[0][0]])
                 
                 # Actions part
-                # FOR INFERENCE MODE ONLY
-                
+                # FOR INFERENCE MODE ONLY     
                 if mode == 0:
                     current_sign = hand_sign_id
-                    # If the current sign is different than the last sign, or if it's been 5 seconds since the last detection
+                    # If the current sign is differentt than the last sign, or if it's been 5 seconds since the last detection
                     if current_sign != last_sign or time.time() - last_detection_time >= 5:
                         if hand_sign_id == 0: # base index 0 is the ID for left swipe
-                            pydirectinput.keyDown('f')
-                            time.sleep(0.1)
-                            pydirectinput.keyUp('f')
-                            time.sleep(0.1)
+                            executor.submit(press_key, 'f')
                             print('left swipe')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
                         elif hand_sign_id == 1: # base index 1 is the ID for right swipe
-                            pydirectinput.keyDown('h')
-                            time.sleep(0.1)
-                            pydirectinput.keyUp('h')
-                            time.sleep(0.1)
+                            executor.submit(press_key, 'j')
                             print('right swipe')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
-                        elif hand_sign_id == 3:
-                            if time.time() - last_toggle_detection_time >= toggle_interval: # base index 3 is the ID for toggle detection
-                                pydirectinput.keyDown('g')
-                                time.sleep(0.1)
-                                pydirectinput.keyUp('g')
-                                time.sleep(0.1)
-                                print('toggle detection')
+                        elif hand_sign_id == 3:  # base index 3 is the ID for toggle detection / turn on
+                            if time.time() - last_detection_off_time >= detection_off_interval or time.time() - last_detection_on_time >= detection_on_interval:
+                                # if the last time it was turned off is more than 10 seconds or if the last time it was turned on is more than 90 seconds
+                                executor.submit(press_key, 'g')
+                                print('detection ON')
                                 last_sign = hand_sign_id
                                 last_detection_time = time.time()
-                                last_toggle_detection_time = time.time()
+                                last_detection_on_time = time.time()
                         elif hand_sign_id == 4: # base index 4 is the ID for blank
                             print('blank')
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
-                        elif hand_sign_id == 5: # base index 5 is the ID for the blank_stop
-                            print('blank stop')
-                            last_sign = hand_sign_id
-                            last_detection_time = time.time()
+                        elif hand_sign_id == 5: # base index 5 is the ID for the stop / turn off
+                            if time.time() - last_detection_on_time >= detection_on_interval or time.time() - last_detection_off_time >= detection_off_interval:
+                                # if the last time it was turned on is more than 90 seconds, or if the last time it was turned off is more than 90 seconds
+                                executor.submit(press_key, 't')
+                                print('detection OFF')
+                                last_sign = hand_sign_id
+                                last_detection_time = time.time()
+                                last_detection_off_time = time.time()
 
 
         else:
