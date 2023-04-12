@@ -8,3 +8,4 @@ pandas
 seaborn
 pydirectinput==1.0.4
 keyboard==0.13.5
+azure-kinect-sensor-sdk==1.4.1
