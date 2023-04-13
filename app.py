@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import csv
+import numpy as np
 import copy
 import keyboard
 from collections import Counter
 from collections import deque
 import pydirectinput
 import time
-import threading
 import concurrent.futures
 
 import cv2 as cv
 import mediapipe as mp
+from pyk4a import PyK4A, Config, ColorResolution, DepthMode, FPS, ImageFormat
 
 from utils import calc_bounding_rect_v2
 from utils import calc_landmark_list_v2
@@ -44,6 +45,15 @@ last_detection_off_time = 0 # track the last time the detection was off
 last_detection_on_time = 0 # track the last time the detection was on
 detection_off_interval = 10 # wait time in seconds
 detection_on_interval = 90 # wait time in seconds
+
+# KINECT INSTANCE
+k4a = PyK4A(Config(color_format=ImageFormat.COLOR_BGRA32,
+                   color_resolution=ColorResolution.RES_720P,
+                   depth_mode=DepthMode.NFOV_2X2BINNED,
+                   camera_fps=FPS.FPS_30))
+# we may have add another argument for selecting azure kinect we want to use; device_index=0
+# or whichever index is for the camera we need
+# COMMENT OUT THE ABOVE BLOCK WHEN USING A WEBCAM
 
 # MEDIAPIPE MODEL LOAD
 mp_hands = mp.solutions.hands
@@ -135,30 +145,46 @@ def logging_csv(bingo, mode, landmark_list, point_history_list):
             last_timestamp = current_timestamp # get the current time
 
 
-# CAMERA PREP
-cap = cv.VideoCapture(cap_device)
-cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
-cap.set(cv.CAP_PROP_BUFFERSIZE, buffer_size)
+# WEB CAMERA PREP, COMMENT OUT WHILST USING AZURE KINECT
+# cap = cv.VideoCapture(cap_device)
+# cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
+# cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+# cap.set(cv.CAP_PROP_BUFFERSIZE, buffer_size)
+
+# AZURE KINECT PREP
+k4a.open()
+k4a.start()
+
 # For FPS counter
 frame_count = 0
 start_time = time.time()
 # THE LOOP
 with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, max_num_hands=1) as hands:
-    while cap.isOpened():
+    while True:
+    # while cap.isOpened(): # COMMENT OUT WHILST USING AZURE KINECT
         mode = select_mode(mode) # select mode
 
         # Camera fps
         frame_count += 1
         fps = fps_actual(frame_count, start_time)
         
-        # Camera capture
-        ret, frame = cap.read()  # ret rerturns a boolean, so if false it breaks us out
-        if not ret:
-            break
+        # Azure Kinect camera capture (color image)
+        capture = k4a.get_capture()
+        color_image = capture.color
+        # Resize the Azure Kinect image to the desired size
+        color_image = cv.resize(color_image, (cap_width, cap_height))
+        # Convert the Azure Kinect image from BGRA to BGR
+        color_image = cv.cvtColor(color_image, cv.COLOR_BGRA2BGR)
+        
+        # Web camera capture # COMMENT OUT WHILST USING AZURE KINECT
+        # ret, frame = cap.read()  # ret rerturns a boolean, so if false it breaks us out
+        # if not ret:
+        #     break
 
         # The Hand and Landmark Detection
-        image, results, debug_image = mediapipe_detection(frame, hands)
+        # image, results, debug_image = mediapipe_detection(frame, hands) # COMMENT OUT WHILST USING AZURE KINECT
+        image, results, debug_image = mediapipe_detection(color_image, hands)
+
         # Drawing of landmarks
         if results.multi_hand_landmarks:
             for num, hand in enumerate(results.multi_hand_landmarks):
@@ -255,9 +281,15 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
         # Video feedback window
         cv.imshow('Hand Gesture Recognition', debug_image)
 
-
+        # Exit the loop if needed
         if cv.waitKey(5) & 0xFF == ord('q'): # quit the program with the letter q
+            try: # COMMENT OUT THE TRY AND EXCEPT BLOCK WHEN USING A WEBCAM
+                k4a.stop() # stop the Azure Kinect camera
+                k4a.close() # close the Azure Kinect device
+            except Exception as e:
+                print("Azure Kinect", e) # handles an error when the Azure Kinect is not connected
             break
 
-cap.release()
+# Release the webcam capture, close the OpenCV window
+# cap.release() # COMMENT OUT WHILST USING AZURE KINECT
 cv.destroyAllWindows()
