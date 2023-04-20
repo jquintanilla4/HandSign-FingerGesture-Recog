@@ -5,13 +5,16 @@ FROM nvidia/cuda:11.0.3-cudnn8-runtime-ubuntu18.04
 WORKDIR /app
 
 # Update and install necessary packages
-RUN apt-get update && apt-get install -y \
+RUN apt-get clean \
+    && apt-get update --fix-missing \
+    && apt-get install -y \
     python3-pip \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgl1-mesa-glx \
-    wget
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Azure Kinect SDK
 RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
