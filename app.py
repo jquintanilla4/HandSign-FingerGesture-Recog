@@ -251,8 +251,8 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
                             last_sign = hand_sign_id
                             last_detection_time = time.time()
                         elif hand_sign_id == 3:  # base index 3 is the ID for toggle detection / turn on
+                            # if the last time it was turned off is more than 10 seconds or if the last time it was turned on is more than 90 seconds
                             if time.time() - last_detection_off_time >= detection_off_interval or time.time() - last_detection_on_time >= detection_on_interval:
-                                # if the last time it was turned off is more than 10 seconds or if the last time it was turned on is more than 90 seconds
                                 executor.submit(press_key, 'g')
                                 print('detection ON')
                                 last_sign = hand_sign_id
