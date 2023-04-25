@@ -32,7 +32,6 @@ while True:
     ir_image_normalized = cv2.normalize(ir_image_clipped, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     # we make the brigthtest 0 and the darkest 255, all the other pixel values are adjusted proportiaonally in between
 
-
     # Convert IR image into 3 channels using OpenCV image
     ir_image_3channel = cv2.cvtColor(ir_image_normalized, cv2.COLOR_GRAY2RGB)
     
@@ -57,4 +56,3 @@ k4a.stop()
 k4a.close()
 cv2.destroyAllWindows()
 hands.close()
-
