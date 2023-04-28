@@ -25,7 +25,7 @@ while True:
     capture = k4a.get_capture()
     ir_image = capture.ir
     
- # Normalize IR image using percentile method
+    # Normalize IR image using percentile method
     ir_min = np.percentile(ir_image, 1) # Find the closest to darkest pixels
     ir_max = np.percentile(ir_image, 99) # Find the closest to brightest pixels
     ir_image_clipped = np.clip(ir_image, ir_min, ir_max) # Clip the image by remove brigter than ir max and darker than ir min
