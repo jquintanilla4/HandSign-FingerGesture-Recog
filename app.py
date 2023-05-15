@@ -325,8 +325,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5, m
             except Exception as e:
                 print('Azure Kinect', e) # handles the error when the Azure Kinect is not connected
             break
-            # if stop_and_close_device(): # COMMENT OUT THE TRY AND EXCEPT BLOCK WHEN USING A WEBCAM
-            #     break
+           # COMMENT OUT THE TRY AND EXCEPT BLOCK WHEN USING A WEBCAM
 
 # Release the webcam capture, close the OpenCV window
 # cap.release() # COMMENT OUT WHILST USING AZURE KINECT
