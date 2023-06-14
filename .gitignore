@@ -177,6 +177,4 @@ data_collected/
 .dockerignore
 
 # R&D related
-kinectDepth.py
-kinectFusionCapture.py
-kinectIR.py
+researchdev/
