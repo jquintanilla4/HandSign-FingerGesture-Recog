@@ -167,7 +167,16 @@ Scripts/
 Lib/
 
 # Model related
-Model/keypoint_classifier/model_training_output
+Model/keypoint_classifier/model_training_output/keypoint_classifier*
 
 # Data related
 data_collected/
+
+# ignore extras
+.gitignore
+.dockerignore
+
+# R&D related
+kinectDepth.py
+kinectFusionCapture.py
+kinectIR.py
