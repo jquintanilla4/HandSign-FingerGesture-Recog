@@ -5,15 +5,16 @@
 <br>
 
 ## Changes from the original fork
-* Simplified the code
-* Refactored the code for easier development (well for me at least)
-* Annotated the code further
-* Added the ability to record more hand signs
-* Added the ability to use an Azure Kinect
-* Added an infrared mode
-* Modified the keypoint_classification_EN.ipynb with more English
-* Modified the keypoint_classification_EN.ipynb to add more layers in the model training
-* ... and other small additions here and there
+* Added Azure Kinect as the main capture device.
+    * Kept webcam capture setup commented out for easy transition.
+* Simplified the code.
+* Refactored the code for easier development (well for me at least).
+* Annotated the code further.
+* Added the ability to record more hand signs.
+* Added an infrared mode.
+* Modified the keypoint_classification_EN.ipynb with more English.
+* Modified the keypoint_classification_EN.ipynb to add more layers in the model training.
+* ... and other small additions here and there.
 
 ## Quick Note
 The classification doesn't work well on IR images. I'm working on a new model to fix that issue, so it works in low light and dark conditions.
