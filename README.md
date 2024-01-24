@@ -20,10 +20,9 @@
 The classification doesn't work well on IR images. I'm working on a new model to fix that issue, so it works in low light and dark conditions.
 
 ## Requirements (tested in 2023)
-* Tensorflow 2.9.0
-* CUDA Toolkit 11.0
-* cuDNN 8.1.1
-* Python 3.10.6 (tested, but might work on other version)
+* CUDA Toolkit 11.0 (tested, but might work with newer versions)
+* cuDNN 8.1.1 (tested, but might work with newer versions)
+* Python 3.10.6 (tested, but might work with newer versions)
 
 ### app.py
 This script is for inference and data collection.
